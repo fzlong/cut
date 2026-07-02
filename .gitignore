@@ -1,0 +1,19 @@
+__pycache__/
+*.pyc
+
+# Local FFmpeg binaries are large; download separately or place manually.
+bin/
+*.exe
+
+# Build outputs
+build/
+dist/
+*.spec
+outputs/
+work/
+
+# Local editor/system files
+.idea/
+.vscode/
+Thumbs.db
+.DS_Store
