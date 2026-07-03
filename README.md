@@ -17,7 +17,13 @@
 
 ## 运行
 
-需要 Python 3.10+ 和 FFmpeg。
+需要 Python 3.10+、FFmpeg，以及窗口拖放依赖 `tkinterdnd2`。
+
+安装 Python 依赖：
+
+```powershell
+python -m pip install -r requirements.txt
+```
 
 程序会优先查找：
 
@@ -40,6 +46,8 @@ python roughcut.py
 ```text
 run.bat
 ```
+
+支持把视频文件直接拖入程序窗口打开。若未安装 `tkinterdnd2`，程序仍可运行，但窗口拖放不可用。
 
 ## 打包
 

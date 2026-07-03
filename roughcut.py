@@ -38,8 +38,15 @@ from tkinter import (
     ttk,
 )
 
+try:
+    from tkinterdnd2 import DND_FILES, TkinterDnD
+except Exception:
+    DND_FILES = None
+    TkinterDnD = None
+
 
 APP_TITLE = "粗剪拼接 - 无重编码视频片段工具"
+VIDEO_SUFFIXES = {".mp4", ".mkv", ".mov", ".flv", ".ts", ".m2ts", ".avi", ".webm", ".wmv", ".mpeg", ".mpg"}
 THUMB_W = 320
 THUMB_H = 180
 PREVIEW_W = 480
@@ -166,6 +173,7 @@ class RoughCutApp:
 
         self._build_ui()
         self._check_tools()
+        self.enable_drag_drop()
 
     def _build_ui(self) -> None:
         top = Frame(self.root, padx=10, pady=8)
@@ -265,7 +273,34 @@ class RoughCutApp:
         if missing:
             self.status.set("缺少 FFmpeg。请把 ffmpeg.exe/ffprobe.exe 放入本目录 bin，或加入 PATH。")
         else:
-            self.status.set("FFmpeg 已就绪。打开视频后会生成缩略图时间轴。")
+            self.status.set("FFmpeg 已就绪。可点击打开视频，也可把视频文件拖入窗口。")
+
+    def enable_drag_drop(self) -> None:
+        if DND_FILES is None:
+            self.status.set(self.status.get() + " 当前环境未安装 tkinterdnd2，窗口拖放不可用。")
+            return
+        for widget in (self.root, self.preview_canvas, self.canvas, self.segment_list):
+            try:
+                widget.drop_target_register(DND_FILES)
+                widget.dnd_bind("<<Drop>>", self.on_file_drop)
+            except Exception as exc:
+                self.log_line(f"拖放注册失败: {exc}")
+
+    def on_file_drop(self, event) -> None:
+        paths = self.parse_dropped_paths(event.data)
+        for path in paths:
+            if path.suffix.lower() in VIDEO_SUFFIXES:
+                self.load_video(path)
+                return
+        if paths:
+            messagebox.showinfo("不是视频文件", "请拖入常见视频文件。")
+
+    def parse_dropped_paths(self, data: str) -> list[Path]:
+        try:
+            items = self.root.tk.splitlist(data)
+        except Exception:
+            items = [data]
+        return [Path(item.strip()) for item in items if item.strip()]
 
     def log_line(self, text: str) -> None:
         def write() -> None:
@@ -958,7 +993,7 @@ class RoughCutApp:
 
 
 def main() -> None:
-    root = Tk()
+    root = TkinterDnD.Tk() if TkinterDnD is not None else Tk()
     app = RoughCutApp(root)
     if len(sys.argv) > 1:
         first = Path(sys.argv[1])
